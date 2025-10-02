@@ -1,0 +1,5 @@
+
+State Machine - |DDS_V2|state
+Name state.S_WAIT 
+state.S_IDLE 0 
+state.S_WAIT 1 

@@ -1,0 +1,267 @@
+﻿// // DDS_V2_UART_LOOP.v —— DAC→ADC 回环 + UART输出帧 (A5, DAC, ADC, XOR, 5A)
+// // 时钟：板载 50 MHz
+// module DDS_V2 #(
+//     parameter integer CLK_FREQ = 50_000_000,
+//     parameter integer BAUD     = 115200
+// )(
+//     input  wire        sys_clk,   // 50MHz
+//     input  wire        rst_n,     // 低有效复位
+
+//     // AD9280 (ADC)
+//     input  wire [7:0]  ad_data,
+//     output wire        ad_clk,
+
+//     // AD9708 (DAC)
+//     output wire        dac_clk,
+//     output wire [7:0]  dac_data,
+
+//     // UART TX
+//     output wire        uart_tx
+// );
+//     // =========================================================
+//     // 1) 产生 0..255 台阶（10秒一圈），每步 39.0625ms
+//     // =========================================================
+//     wire [7:0] dac_value;
+//     wire       step_pulse;
+
+//     wave_gen_0_255_10s u_wave (
+//         .clk        (sys_clk),
+//         .rst_n      (rst_n),
+//         .value      (dac_value),
+//         .step_pulse (step_pulse)
+//     );
+
+//     // =========================================================
+//     // 2) 极简 AD / DA 接口（同域直连 50MHz）
+//     // =========================================================
+//     wire [7:0] adc_sample;
+
+//     AD_IN_CTRL u_ad_in (
+//         .sys_clk  (sys_clk),
+//         .rst_n    (rst_n),
+//         .ad_data  (ad_data),
+//         .ad_clk   (ad_clk),
+//         .data_out (adc_sample)
+//     );
+
+//     DA_OUT_CTRL u_da_out (
+//         .sys_clk  (sys_clk),
+//         .rst_n    (rst_n),
+//         .data_in  (dac_value),
+//         .dac_clk  (dac_clk),
+//         .dac_data (dac_data)
+//     );
+
+//     // =========================================================
+//     // 3) UART 发送：每个 step_pulse 触发发送 5 字节帧
+//     //    帧: 0xA5, DAC, ADC, (DAC^ADC), 0x5A
+//     // =========================================================
+//     localparam integer BAUD_TICKS    = CLK_FREQ / BAUD;
+//     localparam integer BYTE_GAP_TCKS = BAUD_TICKS * 12; // 每字节间隔 ~12bit
+
+//     // 帧缓存
+//     reg [7:0] frame [0:4];
+//     reg [2:0] byte_idx;
+//     reg [31:0] byte_gap_cnt;
+//     reg        tx_start_pulse;
+//     reg [7:0]  tx_data;
+
+//     // 状态机编码
+//     localparam S_IDLE = 2'd0;
+//     localparam S_WAIT = 2'd1;
+
+//     reg [1:0] state;
+
+//     // UART 实例
+//     uart_tx_simple #(
+//         .CLK_FREQ (CLK_FREQ),
+//         .BAUD     (BAUD)
+//     ) u_tx (
+//         .clk       (sys_clk),
+//         .reset_n   (rst_n),
+//         .start     (tx_start_pulse), // 上升沿触发
+//         .data_in   (tx_data),
+//         .baud_div_i(32'd0),
+//         .tx        (uart_tx)
+//     );
+
+//     // 状态机
+//     always @(posedge sys_clk or negedge rst_n) begin
+//         if (!rst_n) begin
+//             state          <= S_IDLE;
+//             byte_idx       <= 3'd0;
+//             byte_gap_cnt   <= 32'd0;
+//             tx_start_pulse <= 1'b0;
+//             tx_data        <= 8'h00;
+//         end else begin
+//             tx_start_pulse <= 1'b0; // 默认不触发
+
+//             case (state)
+//                 S_IDLE: begin
+//                     if (step_pulse) begin
+//                         // 准备帧
+//                         frame[0] <= 8'hA5;
+//                         frame[1] <= dac_value;
+//                         frame[2] <= adc_sample;
+//                         frame[3] <= (dac_value ^ adc_sample);
+//                         frame[4] <= 8'h5A;
+
+//                         // 发送第一个字节
+//                         tx_data        <= 8'hA5;
+//                         tx_start_pulse <= 1'b1;
+//                         byte_idx       <= 3'd0;
+//                         byte_gap_cnt   <= 32'd0;
+//                         state          <= S_WAIT;
+//                     end
+//                 end
+
+//                 S_WAIT: begin
+//                     if (byte_gap_cnt >= (BYTE_GAP_TCKS-1)) begin
+//                         byte_gap_cnt <= 32'd0;
+
+//                         if (byte_idx == 3'd4) begin
+//                             state <= S_IDLE;
+//                         end else begin
+//                             byte_idx       <= byte_idx + 3'd1;
+//                             tx_data        <= frame[byte_idx + 3'd1];
+//                             tx_start_pulse <= 1'b1;
+//                             state          <= S_WAIT;
+//                         end
+//                     end else begin
+//                         byte_gap_cnt <= byte_gap_cnt + 1'b1;
+//                     end
+//                 end
+//             endcase
+//         end
+//     end
+
+// endmodule
+
+
+// top_oscilloscope.v —— 简易单通道“示波器”顶层
+module DDS_V2 #(
+    parameter integer H_VALID = 800,
+    parameter integer V_VALID = 480
+)(
+    input  wire        sys_clk,     // 系统时钟（给 AD/DA/波形源等）
+    input  wire        rst_n,
+
+    // ---- ADC / DAC 物理引脚（按你板级连接命名）----
+    input  wire [7:0]  ad_data,
+    output wire        ad_clk,      // 若 AD 需要外部时钟驱动可接出
+    output wire        dac_clk,
+    output wire [7:0]  dac_data,
+
+    // ---- LCD 物理引脚 ----
+    output wire        lcd_hs,
+    output wire        lcd_vs,
+    output wire        lcd_de,
+    output wire [15:0] lcd_rgb,
+    output wire        lcd_bl,
+    output wire        lcd_rst,
+    output wire        lcd_pclk
+);
+
+    // =========================
+    // 1) AD 采样 & DA 测试源
+    // =========================
+    wire [7:0] adc_sample;  // 8bit 采样（0..255）
+    AD_IN_CTRL u_ad_in (
+        .sys_clk  (sys_clk),
+        .rst_n    (rst_n),
+        .ad_data  (ad_data),
+        .ad_clk   (ad_clk),
+        .data_out (adc_sample)
+    );
+
+    wire [7:0] dac_value;
+    wire       step_pulse;  // 每次更新 DAC 值给一个脉冲（我们用它来节流写入 800 点）
+    DA_OUT_CTRL u_da_out (
+        .sys_clk  (sys_clk),
+        .rst_n    (rst_n),
+        .data_in  (dac_value),
+        .dac_clk  (dac_clk),
+        .dac_data (dac_data)
+    );
+    wave_gen_0_255_10s u_wave (
+        .clk        (sys_clk),
+        .rst_n      (rst_n),
+        .value      (dac_value),
+        .step_pulse (step_pulse)
+    );
+
+    // =========================
+    // 2) LCD 驱动
+    // =========================
+    wire [15:0] pixel_data;
+    wire [10:0] pixel_xpos; // 0..H_VALID-1
+    wire [10:0] pixel_ypos; // 0..V_VALID-1
+
+    // 这里直接用你的 LCD_DRIVER 实例名与端口
+    LCD_DRIVER u_lcd (
+        .sys_clk   (sys_clk),    // 如果你有专门的 clk_33m，请替换为它
+        .sys_rst_n (rst_n),
+        .lcd_hs    (lcd_hs),
+        .lcd_vs    (lcd_vs),
+        .lcd_de    (lcd_de),
+        .lcd_rgb   (lcd_rgb),
+        .lcd_bl    (lcd_bl),
+        .lcd_rst   (lcd_rst),
+        .lcd_pclk  (lcd_pclk),
+        .pixel_data(pixel_data),
+        .pixel_xpos(pixel_xpos),
+        .pixel_ypos(pixel_ypos)
+    );
+
+    // =========================
+    // 3) 乒乓行缓冲（800x8）
+    // 写侧：sys_clk 域，用 step_pulse 作为 wr_valid，每来一个点写一个
+    // 读侧：lcd_pclk 域，地址接 pixel_xpos[9:0]
+    // =========================
+    wire [7:0] line_rd_data;
+    wire       line_ready;    // 写满 800 点后翻面并出脉冲到读侧（内部已做跨域同步）
+    wire       wr_busy;
+
+    wave_linebuf_pingpong #(
+        .LEN(800)
+    ) u_linebuf (
+        // 写侧（与 AD/波形发生器在同一时钟域）
+        .wr_clk       (sys_clk),
+        .wr_rst_n     (rst_n),
+        .wr_valid     (step_pulse),     // 用 step_pulse 采 800 个点/行
+        .wr_data      (adc_sample),     // 直接存原始 8bit
+        .wr_busy      (wr_busy),
+        .line_ready   (line_ready),
+        .wr_line_start(1'b0),           // 需要外部对齐时再用
+
+        // 读侧（LCD 像素时钟）
+        .rd_clk       (lcd_pclk),
+        .rd_rst_n     (rst_n),
+        .rd_addr      (pixel_xpos[9:0]),// 0..799
+        .rd_data      (line_rd_data)
+    );
+
+    // =========================
+    // 4) 波形着色（把 8bit 值映射为屏幕 Y，当前 x 列只点亮该 y 像素）
+    // =========================
+    wire [15:0] wave_pixel;
+    wave_draw_rgb565 #(
+        .H_VALID (H_VALID),
+        .V_VALID (V_VALID),
+        .Y_GAIN_SHIFT(0),      // =0 等效 1x；=1 等效 2x（把 8bit 放大到更高分辨率屏幕时可调）
+        .Y_BIAS (0),           // 垂直偏置，正值向上（单位：像素）
+        .WAVE_COLOR (16'hF800),// 红色
+        .BG_COLOR   (16'h0000) // 黑色
+    ) u_draw (
+        .pclk       (lcd_pclk),
+        .rst_n      (rst_n),
+        .lcd_de     (lcd_de),
+        .x          (pixel_xpos),
+        .y          (pixel_ypos),
+        .sample_8b  (line_rd_data),
+        .pixel_out  (wave_pixel)
+    );
+
+    assign pixel_data = wave_pixel; // 直接作为 LCD 像素输出
+
+endmodule

@@ -1,0 +1,17 @@
+-- begin_signature
+-- DDS_V2
+-- end_signature
+WIDTH=8;
+DEPTH=6;
+
+ADDRESS_RADIX=UNS;
+DATA_RADIX=BIN;
+
+CONTENT BEGIN
+	5 :	11111111;
+	4 :	11001100;
+	3 :	10011001;
+	2 :	01100110;
+	1 :	00110011;
+	0 :	00000000;
+END;

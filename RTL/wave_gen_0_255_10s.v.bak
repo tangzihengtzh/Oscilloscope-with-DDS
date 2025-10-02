@@ -1,0 +1,31 @@
+// wave_gen_0_255_10s.v —— 产生 0..255 码值，周期10秒
+// DAC: AD9708 输入 0 -> +5V, 255 -> -5V
+// 本模块只负责产生码元，不再做电压映射，电压换算由上位机完成
+module wave_gen_0_255_10s (
+    input  wire       clk,        // 50MHz
+    input  wire       rst_n,      // 低有效复位
+    output reg  [7:0] value,      // 当前码值 0..255 循环
+    output reg        step_pulse  // 每次 value 递增时拉高1个clk
+);
+    // 每步周期 = 10s / 256 ≈ 39.0625 ms
+    localparam integer CYCLES_PER_STEP = 32'd1_953_125;
+
+    reg [31:0] cnt;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            cnt        <= 32'd0;
+            value      <= 8'd0;
+            step_pulse <= 1'b0;
+        end else begin
+            if (cnt == CYCLES_PER_STEP-1) begin
+                cnt        <= 32'd0;
+                value      <= value + 8'd1;  // 自动回卷到0
+                step_pulse <= 1'b1;
+            end else begin
+                cnt        <= cnt + 32'd1;
+                step_pulse <= 1'b0;
+            end
+        end
+    end
+endmodule

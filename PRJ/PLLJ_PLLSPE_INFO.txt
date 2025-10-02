@@ -1,0 +1,5 @@
+PLL_Name	LCD_DRIVER:u_lcd|pll_ip:pll_ip_inst|altpll:altpll_component|pll_ip_altpll:auto_generated|pll1
+PLLJITTER	NA
+PLLSPEmax	84
+PLLSPEmin	-53
+

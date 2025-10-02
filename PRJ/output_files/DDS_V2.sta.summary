@@ -1,0 +1,89 @@
+------------------------------------------------------------
+TimeQuest Timing Analyzer Summary
+------------------------------------------------------------
+
+Type  : Slow 1200mV 85C Model Setup 'u_lcd|pll_ip_inst|altpll_component|auto_generated|pll1|clk[0]'
+Slack : -1.754
+TNS   : -16.255
+
+Type  : Slow 1200mV 85C Model Setup 'sys_clk'
+Slack : -0.394
+TNS   : -0.540
+
+Type  : Slow 1200mV 85C Model Hold 'sys_clk'
+Slack : -0.081
+TNS   : -0.081
+
+Type  : Slow 1200mV 85C Model Hold 'u_lcd|pll_ip_inst|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 0.648
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Minimum Pulse Width 'AD_IN_CTRL:u_ad_in|ad_clk_r'
+Slack : -1.487
+TNS   : -11.896
+
+Type  : Slow 1200mV 85C Model Minimum Pulse Width 'sys_clk'
+Slack : 9.666
+TNS   : 0.000
+
+Type  : Slow 1200mV 85C Model Minimum Pulse Width 'u_lcd|pll_ip_inst|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 14.759
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Setup 'u_lcd|pll_ip_inst|altpll_component|auto_generated|pll1|clk[0]'
+Slack : -1.563
+TNS   : -14.507
+
+Type  : Slow 1200mV 0C Model Setup 'sys_clk'
+Slack : -0.358
+TNS   : -0.488
+
+Type  : Slow 1200mV 0C Model Hold 'sys_clk'
+Slack : -0.048
+TNS   : -0.048
+
+Type  : Slow 1200mV 0C Model Hold 'u_lcd|pll_ip_inst|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 0.595
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Minimum Pulse Width 'AD_IN_CTRL:u_ad_in|ad_clk_r'
+Slack : -1.487
+TNS   : -11.896
+
+Type  : Slow 1200mV 0C Model Minimum Pulse Width 'sys_clk'
+Slack : 9.671
+TNS   : 0.000
+
+Type  : Slow 1200mV 0C Model Minimum Pulse Width 'u_lcd|pll_ip_inst|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 14.760
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Setup 'u_lcd|pll_ip_inst|altpll_component|auto_generated|pll1|clk[0]'
+Slack : -0.729
+TNS   : -6.675
+
+Type  : Fast 1200mV 0C Model Setup 'sys_clk'
+Slack : 0.310
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Hold 'sys_clk'
+Slack : -0.145
+TNS   : -0.145
+
+Type  : Fast 1200mV 0C Model Hold 'u_lcd|pll_ip_inst|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 0.257
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Minimum Pulse Width 'AD_IN_CTRL:u_ad_in|ad_clk_r'
+Slack : -1.000
+TNS   : -8.000
+
+Type  : Fast 1200mV 0C Model Minimum Pulse Width 'sys_clk'
+Slack : 9.372
+TNS   : 0.000
+
+Type  : Fast 1200mV 0C Model Minimum Pulse Width 'u_lcd|pll_ip_inst|altpll_component|auto_generated|pll1|clk[0]'
+Slack : 14.781
+TNS   : 0.000
+
+------------------------------------------------------------

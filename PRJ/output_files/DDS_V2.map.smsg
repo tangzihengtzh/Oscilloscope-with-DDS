@@ -1,0 +1,2 @@
+Warning (10268): Verilog HDL information at pattern_gen.v(73): always construct contains both blocking and non-blocking assignments
+Warning (10268): Verilog HDL information at wave_gen_0_255_10s.v(283): always construct contains both blocking and non-blocking assignments

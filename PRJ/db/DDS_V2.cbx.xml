@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<LOG_ROOT>
+	<PROJECT NAME="DDS_V2">
+		<CBX_INST_ENTRY INSTANCE_NAME="|DDS_V2|LCD_DRIVER:u_lcd|pll_ip:pll_ip_inst|altpll:altpll_component" CBX_FILE_NAME="pll_ip_altpll.v"/>
+		<CBX_INST_ENTRY INSTANCE_NAME="|DDS_V2|circ_linebuf_800x8:u_circ|altsyncram:mem_rtl_0" CBX_FILE_NAME="altsyncram_lue1.tdf"/>
+	</PROJECT>
+</LOG_ROOT>
